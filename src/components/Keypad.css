@@ -1,14 +1,36 @@
 .keypad {
-    max-width: 500px;
-    margin: 20px auto;
+    max-width: 600px; /* Adjusted max-width to accommodate the full keyboard */
+    margin: 20px auto; /* Center the keypad */
+    text-align: center; /* Center the rows */
 }
 
-.keypad> div {
-    margin: 5px;
-    width: 40px;
-    height: 50px;
+.key-row {
+    display: flex; /* Use flexbox for horizontal alignment of keys in a row */
+    justify-content: center; /* Center the keys within each row */
+    margin-bottom: 8px; /* Space between rows */
+}
+
+.key-button {
+    margin: 4px; /* Increased margin for better spacing */
+    min-width: 40px; /* Increased width for individual keys */
+    height: 50px; /* Increased height */
     background: #e4e4e4;
-    display: inline-block;
+    display: flex; /* Use flexbox to center content vertically and horizontally */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
     border-radius: 6px;
-    line-height: 50px;
+    font-size: 1.1em; /* Slightly larger font */
+    text-transform: uppercase; /* Make letters uppercase */
+    cursor: pointer; /* Indicate interactivity */
+    user-select: none; /* Prevent text selection */
+    transition: background-color 0.2s ease; /* Smooth transition for hover effects */
+}
+
+.key-button:hover {
+    background-color: #d1d1d1; /* Darken on hover */
+}
+
+.key-button.large-key {
+    min-width: 80px; /* Wider for Enter and Backspace */
+    font-size: 0.9em; /* Adjust font size for large keys if needed */
 }

@@ -104,8 +104,8 @@ html, body, #root {
 
 .keyboard {
     height: 30%;
-    background: #e4e2d4;
-    display: flex;
+    background: #ffffff;
+    width: 100%;
     align-items: center;
     justify-content: center;
 }

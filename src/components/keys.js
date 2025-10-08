@@ -1,10 +1,12 @@
-const keys = [
-    {keys: 'a'}, {keys: 'b'}, {keys: 'c'}, {keys: 'd'}, {keys: 'e'}, {keys: 'f'},
-    {keys: 'g'}, {keys: 'h'}, {keys: 'i'}, {keys: 'j'}, {keys: 'k'}, {keys: 'l'},
-    {keys: 'm'}, {keys: 'n'}, {keys: 'o'}, {keys: 'p'}, {keys: 'q'}, {keys: 'r'},
-    {keys: 's'}, {keys: 't'}, {keys: 'u'}, {keys: 'v'}, {keys: 'w'}, {keys: 'x'},
-    {keys: 'y'}, {keys: 'z'}
+import BackspaceIcon from '../../public/backspace.svg'
 
-]
+const keys = [
+
+    [{key: 'q'}, {key: 'w'}, {key: 'e'}, {key: 'r'}, {key: 't'}, {key: 'y'}, {key: 'u'}, {key: 'i'}, {key: 'o'}, {key: 'p'}],
+
+    [{key: 'a'}, {key: 's'}, {key: 'd'}, {key: 'f'}, {key: 'g'}, {key: 'h'}, {key: 'j'}, {key: 'k'}, {key: 'l'}],
+
+    [{key: 'ENTER'}, {key: 'z'}, {key: 'x'}, {key: 'c'}, {key: 'v'}, {key: 'b'}, {key: 'n'}, {key: 'm'}, {key: '⌫'}]
+];
 
 export default keys;
