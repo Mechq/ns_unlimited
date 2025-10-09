@@ -182,6 +182,31 @@ html, body, #root {
     flex-shrink: 0;
     margin-bottom: 6px;
     position: relative;
+    overflow: hidden;
+}
+
+.guess-circle.correct::before,
+.guess-circle.correct::after {
+    content: '';
+    position: absolute;
+    background-color: #003082;
+    border-radius: 2px;
+}
+
+.guess-circle.correct::before {
+    width: 4px;
+    height: 12px;
+    left: 9px;
+    top: 4px;
+    transform: rotate(-45deg);
+}
+
+.guess-circle.correct::after {
+    width: 8px;
+    height: 4px;
+    left: 11px;
+    top: 12px;
+    transform: rotate(-45deg);
 }
 
 .guess-circle.incorrect::before,
@@ -199,4 +224,3 @@ html, body, #root {
 .guess-circle.incorrect::after {
     transform: translate(-50%, -50%) rotate(-45deg);
 }
-
