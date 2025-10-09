@@ -1,14 +1,7 @@
-import React, {useEffect, useState} from 'react'
 import './Keypad.css'
 
 export default function Keypad({keys, onKeyClick}) {
- /*   const [letters, setLetters] = useState(null);
 
-
-    useEffect(() => {
-        setLetters(keys);
-    }, [keys])
-*/
 
     return (
         <div className="keypad">

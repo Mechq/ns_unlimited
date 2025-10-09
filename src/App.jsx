@@ -1,12 +1,11 @@
 import './App.css'
-import { useState, useEffect } from "react";
+import {useEffect, useState} from "react";
 import Keypad from "./components/Keypad.jsx";
 import keys from "./components/keys.js";
 
 
-
 function App() {
-    const [gameType, setGameType] = useState('Daily');
+    const [gameType, setGameType] = useState('Dagelijks');
     const [solution, setSolution] = useState('Barendrecht');
     const [scrambledSolution, setScrambledSolution] = useState('Rech te brand');
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -14,6 +13,11 @@ function App() {
     const [currentGuess, setCurrentGuess] = useState('');
     const [currentGuessIndex, setCurrentGuessIndex] = useState(0);
     const [gameStatus, setGameStatus] = useState('playing');
+    const [winningModal, setWinningModal] = useState(false);
+
+    function closeModal() {
+        setWinningModal(false);
+    }
 
     const max_guesses = 5;
     const max_guess_length = 22;
@@ -62,8 +66,8 @@ function App() {
         // Check win/loss conditions
         if (isCorrect) {
             setGameStatus('won');
+            setWinningModal(true)
             console.log("You win!");
-            // TODO: Implement winning scene
         } else if (currentGuessIndex === max_guesses - 1) {
             setGameStatus('lost');
             console.log(`Game over! The answer was: ${solution}`);
@@ -113,47 +117,63 @@ function App() {
     };
 
     return (
-        <div className="App">
-            <div className="game">
-                {/* Top Bar with logo and gameType */}
-                <div className="topbar">
-                    {/* The logo svg */}
-                    <img src="/logo.svg" alt="logo"/>
+        <>
+            <div className="App">
+                <div className="game">
+                    {/* Top Bar with logo and gameType */}
+                    <div className="topbar">
+                        {/* The logo svg */}
+                        <img src="/logo.svg" alt="logo"/>
 
-                    {/* The dropdown for gameType */}
-                    <div className="gameType">
-                        <button onClick={toggleDropdown}>
-                            <img src="/down_arrow.svg" alt="down_arrow"/>
-                        </button>
-                        {gameType}
-                        {dropdownOpen && (
-                            <div className="dropdown-content">
-                                <a href="#" onClick={(e) => {
-                                    e.preventDefault();
-                                    handleGameTypeChange('Daily');
-                                }}>Daily</a>
-                                <a href="#" onClick={(e) => {
-                                    e.preventDefault();
-                                    handleGameTypeChange('Unlimited');
-                                }}>Unlimited</a>
-                            </div>
-                        )}
+                        {/* The dropdown for gameType */}
+                        <div className="gameType">
+                            <button onClick={toggleDropdown}>
+                                <img src="/down_arrow.svg" alt="down_arrow"/>
+                            </button>
+                            {gameType}
+                            {dropdownOpen && (
+                                <div className="dropdown-content">
+                                    <a href="#" onClick={(e) => {
+                                        e.preventDefault();
+                                        handleGameTypeChange('Dagelijks');
+                                    }}>Dagelijks</a>
+                                    <a href="#" onClick={(e) => {
+                                        e.preventDefault();
+                                        handleGameTypeChange('Oneindig');
+                                    }}>Oneindig</a>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* The station to guess */}
+                    <div className="wordToGuess">{scrambledSolution}</div>
+
+                    {/* Your guesses */}
+                    <div className="guessList">
+                        {Array.from({length: max_guesses}, (_, i) => renderGuess(i))}
                     </div>
                 </div>
 
-                {/* The station to guess */}
-                <div className="wordToGuess">{scrambledSolution}</div>
-
-                {/* Your guesses */}
-                <div className="guessList">
-                    {Array.from({ length: max_guesses }, (_, i) => renderGuess(i))}
+                <div className="keyboard">
+                    <Keypad keys={keys} onKeyClick={handleKeypadInput}/>
                 </div>
             </div>
+            {winningModal ? <div className="modal">
 
-            <div className="keyboard">
-                <Keypad keys={keys} onKeyClick={handleKeypadInput} />
-            </div>
-        </div>
+                    <div className="modal-inner">
+                        <div className="modal-header">
+                            <p>
+                                <span id="congrats">Gefeliciteerd!</span>
+                                <br/>Je raadde het station in {currentGuessIndex + 1} pogingen.
+                            </p></div>
+                        <div className="share">
+                            <button>Deel dit resultaat met je vrienden.</button>
+                        </div>
+                        <div className="close" onClick={closeModal}></div>                    </div>
+                </div>
+                : null}
+        </>
     );
 }
 
