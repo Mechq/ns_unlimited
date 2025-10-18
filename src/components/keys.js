@@ -1,4 +1,4 @@
-import BackspaceIcon from '../../public/backspace.svg'
+import BackspaceIcon from '../../src/backspace.svg'
 
 const keys = [
 

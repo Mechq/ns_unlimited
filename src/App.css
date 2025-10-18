@@ -272,6 +272,18 @@ html, body, #root {
     margin-top: 40px;
 }
 
+.play-again{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 10px;
+}
+#play-again{
+    background: #0e8303;
+}
+
 .share button {
     background: #003082;
     color: #FEFEFE;

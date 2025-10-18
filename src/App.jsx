@@ -1,13 +1,14 @@
 import './App.css'
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import Keypad from "./components/Keypad.jsx";
 import keys from "./components/keys.js";
+import {stations} from "../data.js";
 
 
 function App() {
     const [gameType, setGameType] = useState('Dagelijks');
-    const [solution, setSolution] = useState('Barendrecht');
-    const [scrambledSolution, setScrambledSolution] = useState('Rech te brand');
+    const [solution, setSolution] = useState('sssss');
+    const [scrambledSolution, setScrambledSolution] = useState('aaaaaa');
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [guesses, setGuesses] = useState(['', '', '', '', '']);
     const [currentGuess, setCurrentGuess] = useState('');
@@ -22,16 +23,34 @@ function App() {
     const max_guesses = 5;
     const max_guess_length = 22;
     // Reset game when game type changes
-    useEffect(() => {
-        resetGame();
-    }, [gameType]);
-
-    const resetGame = () => {
+    const resetGame = useCallback(() => {
         setGuesses(['', '', '', '', '']);
         setCurrentGuess('');
         setCurrentGuessIndex(0);
         setGameStatus('playing');
-        // TODO: Load new scrambled solution if playing unlimited and reset daily for daily game
+        setWinningModal(false);
+        const { solution, scrambledSolution } = selectRandomStation(stations);
+        setScrambledSolution(scrambledSolution);
+        setSolution(solution);
+    }, []);
+
+    useEffect(() => {
+        resetGame();
+    }, [gameType, resetGame]);
+
+
+    const selectRandomStation = (stationsData) => {
+        const stations = stationsData[0];
+
+        const stationNames = Object.keys(stations);
+        const randStationIndex = Math.floor(Math.random() * stationNames.length);
+        const randSolution = stationNames[randStationIndex];
+
+        const scrambledList = stations[randSolution];
+        const randScrambledIndex = Math.floor(Math.random() * scrambledList.length);
+        const scrambledSolution = scrambledList[randScrambledIndex];
+
+        return {  solution: randSolution, scrambledSolution };
     };
 
     const handleKeypadInput = (keyValue) => {
@@ -167,9 +186,16 @@ function App() {
                                 <span id="congrats">Gefeliciteerd!</span>
                                 <br/>Je raadde het station in {currentGuessIndex + 1} pogingen.
                             </p></div>
-                        <div className="share">
-                            <button>Deel dit resultaat met je vrienden.</button>
-                        </div>
+                        {gameType === 'Dagelijks' ?
+                            <div className="share">
+                                <button>Deel dit resultaat met je vrienden.</button>
+                            </div>
+                            :
+                            <div className="share play-again">
+                                <button onClick={resetGame} id="play-again">Speel opnieuw! ↺</button>
+                                <button>Deel dit resultaat met je vrienden.</button>
+                            </div>
+                        }
                         <div className="close" onClick={closeModal}></div>                    </div>
                 </div>
                 : null}
