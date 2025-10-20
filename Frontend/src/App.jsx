@@ -7,8 +7,8 @@ import {stations} from "../data.js";
 
 function App() {
     const [gameType, setGameType] = useState('Dagelijks');
-    const [solution, setSolution] = useState('sssss');
-    const [scrambledSolution, setScrambledSolution] = useState('aaaaaa');
+    const [solution, setSolution] = useState('');
+    const [scrambledSolution, setScrambledSolution] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [guesses, setGuesses] = useState(['', '', '', '', '']);
     const [currentGuess, setCurrentGuess] = useState('');
@@ -22,21 +22,62 @@ function App() {
 
     const max_guesses = 5;
     const max_guess_length = 22;
+
+    const resetUnlimitedGame = useCallback(() => {
+        console.log("reset unlimitedGame" + gameType);
+
+        if (gameType === 'Oneindig') {
+            console.log("Game Type");
+            resetGame()
+            const {solution, scrambledSolution} = selectRandomStation(stations);
+            console.log(scrambledSolution);
+            setScrambledSolution(scrambledSolution);
+            setSolution(solution);
+        }
+    }, [gameType])
+
     // Reset game when game type changes
-    const resetGame = useCallback(() => {
+    const resetGame = () => {
         setGuesses(['', '', '', '', '']);
         setCurrentGuess('');
         setCurrentGuessIndex(0);
         setGameStatus('playing');
         setWinningModal(false);
-        const {solution, scrambledSolution} = selectRandomStation(stations);
-        setScrambledSolution(scrambledSolution);
-        setSolution(solution);
-    }, []);
+
+    }
 
     useEffect(() => {
-        resetGame();
-    }, [gameType, resetGame]);
+        if (gameType === "Dagelijks") {
+            console.log("callinggggg");
+            //if local storage already has a station that equals the daily station then dont reset the game.
+            // If local storage has a station that does not equal the daily it means that game is from a different date
+
+            fetch("http://localhost:3000/daily-station/")
+                .then(res => res.json())
+                .then(data => {
+                    console.log("aaaaaaaaaa", data);
+                    if (localStorage.getItem('station') === data.station) {
+                        //TODO load guesses from cookie
+                    }
+                    else {
+                        resetGame();
+
+                        localStorage.setItem('station', data.station);
+
+                        localStorage.setItem('shuffledStation', data.anagrams[0]);
+                    }
+                    setSolution(data.station);
+                    setScrambledSolution(data.anagrams[0]);
+
+                    console.log("Today's station:", data.station);
+                });
+        }
+
+    }, [gameType]);
+
+    useEffect(() => {
+        resetUnlimitedGame();
+    }, [gameType]);
 
 
     const selectRandomStation = (stationsData) => {
@@ -82,6 +123,8 @@ function App() {
             return newGuesses;
         });
 
+        //TODO add guess to browsers local storage
+
         // Check win/loss conditions
         if (isCorrect) {
             setGameStatus('won');
@@ -101,6 +144,7 @@ function App() {
     const handleGameTypeChange = (newGameType) => {
         setGameType(newGameType);
         setDropdownOpen(false);
+        console.log(newGameType);
     };
 
     const toggleDropdown = () => {
