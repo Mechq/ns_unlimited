@@ -48,18 +48,21 @@ html, body, #root {
     background: #E2AB17;
     border-radius: 10px;
     color: #01013D;
-    padding: 4px;
-    padding-right: 10px;
     display: flex;
+    padding: 4px 10px 4px 6px;
     align-items: center;
     font-size: 18px;
     position: relative;
+    cursor: pointer;
+    gap: 2px;
+    justify-content: center;
+    margin-right: 4vw
 }
 
 .gameType button {
+    cursor: pointer;
     background: none;
     border: none;
-    cursor: pointer;
     display: flex;
     align-items: center;
 }
@@ -69,29 +72,117 @@ html, body, #root {
     width: 20px;
 }
 
+
 .dropdown-content {
     position: absolute;
     top: 100%;
-    right: 0;
-    background: #FEFEFE;
-    min-width: 100px;
-    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-    z-index: 1;
-    border-radius: 8px;
-    overflow: hidden;
-    font-size: 14px;
+    z-index: 10;
+    width: 140%;
+    justify-content: center;
+
+    animation: dropdownFade 0.25s ease-out;
 }
 
-.dropdown-content a {
-    color: #01013D;
-    padding: 10px 14px;
-    text-decoration: none;
-    display: block;
+
+
+/* Top gray bars */
+.tabs {
+    display: flex;
+    justify-content: space-between;
+    width: 60%;
+    left: 20%;
+    justify-self: center;
+    position: relative;
+    padding: 0 16px;
 }
 
-.dropdown-content a:hover {
-    background-color: #f1f1f1;
+.tab {
+    width: 10%;
+    height: 16px;
+    background: #a3a3a3;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
 }
+
+/* The dropdown "box" */
+.menu-box {
+    background: #fefefe;
+    border: 4px solid #003082;
+    border-radius: 6px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+    width: 100%;
+    list-style: none;
+
+}
+
+.menu-box ul {
+    list-style: none;
+}
+
+.menu-box li {
+    padding: 6px 0;
+    color: #01013d;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.menu-box li:visited {
+    color: #01013d;
+}
+
+.menu-box li:hover {
+    color: #003082;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    color: #01013d;
+    cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #003082;
+    border-radius: 50%;
+    background-color: #fff;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Inner filled circle when selected */
+.radio-option input[type="radio"]:checked::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #003082;
+}
+
+/* Hover effect */
+.radio-option:hover input[type="radio"] {
+    border-color: #4f7499;
+}
+
+/* Hover text color change */
+.radio-option:hover {
+    color: #003082;
+}
+
+@keyframes dropdownFade {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
 
 .wordToGuess{
     background: #003082;
@@ -118,7 +209,7 @@ html, body, #root {
     outline: none;
     background: transparent;
     font-family: inherit;
-    font-size: 22px;
+    font-size: 18px;
     color: #01013D;
     margin-left: 16px;
     width: 180px;
@@ -134,10 +225,10 @@ html, body, #root {
     flex-direction: column;
     align-self: center;
     background: #FEFEFE;
-    width: 275px;
+    width: 300px;
     padding: 5px;
     font-family: inherit;
-    font-size: 22px;
+    font-size: 18px;
     color: #01013D;
     border-radius: 8px;
 
@@ -150,13 +241,14 @@ html, body, #root {
     position: relative;
     margin-left: 10px;
     padding: 5px 0;
-    min-height: 69px;
+    min-height: 80px;
 }
 
 
 .guessText{
     margin-left: 16px;
     width: 180px;
+    margin-top: 10px;
     border-bottom: 1px #D9D9D9 solid;
     line-height: 2.2;
     display: inline-block;
@@ -172,9 +264,9 @@ html, body, #root {
     content: '';
     position: absolute;
     left: 11px;
-    top: 62%;
+    top: 61%;
     width: 2px;
-    height: 48px;
+    height: 57px;
     background-color: #003082;
 }
 
@@ -201,17 +293,17 @@ html, body, #root {
 .guess-circle.correct::before {
     width: 4px;
     height: 12px;
-    left: 9px;
-    top: 4px;
-    transform: rotate(-45deg);
+    left: 10px;
+    top: 5px;
+    transform: rotate(45deg);
 }
 
 .guess-circle.correct::after {
     width: 8px;
     height: 4px;
-    left: 11px;
-    top: 12px;
-    transform: rotate(-45deg);
+    left: 3px;
+    top: 10px;
+    transform: rotate(45deg);
 }
 
 .guess-circle.incorrect::before,
@@ -367,9 +459,12 @@ html, body, #root {
 @media (min-width: 800px) {
     .guessList{
         width: 495px;
+        font-size: 22px;
     }
     .guessText, .guess-input {
         width: 324px;
+        font-size: 22px;
+        margin-top: 0;
     }
 
 

@@ -29,7 +29,7 @@ function App() {
         setCurrentGuessIndex(0);
         setGameStatus('playing');
         setWinningModal(false);
-        const { solution, scrambledSolution } = selectRandomStation(stations);
+        const {solution, scrambledSolution} = selectRandomStation(stations);
         setScrambledSolution(scrambledSolution);
         setSolution(solution);
     }, []);
@@ -50,7 +50,7 @@ function App() {
         const randScrambledIndex = Math.floor(Math.random() * scrambledList.length);
         const scrambledSolution = scrambledList[randScrambledIndex];
 
-        return {  solution: randSolution, scrambledSolution };
+        return {solution: randSolution, scrambledSolution};
     };
 
     const handleKeypadInput = (keyValue) => {
@@ -145,21 +145,57 @@ function App() {
                         <img src="/logo.svg" alt="logo"/>
 
                         {/* The dropdown for gameType */}
-                        <div className="gameType">
-                            <button onClick={toggleDropdown}>
+                        <div onClick={toggleDropdown} className="gameType">
+                            <button>
                                 <img src="/down_arrow.svg" alt="down_arrow"/>
                             </button>
                             {gameType}
                             {dropdownOpen && (
+                                /*<div className="dropdown-content">
+                                       <li><a href="#" onClick={(e) => {
+                                                e.preventDefault();
+                                                handleGameTypeChange('Dagelijks');
+                                            }}>Dagelijks</a></li>
+                                            <li><a href="#" onClick={(e) => {
+                                                e.preventDefault();
+                                                handleGameTypeChange('Oneindig');
+                                            }}>Oneindig</a></li>
+                                </div>*/
                                 <div className="dropdown-content">
-                                    <a href="#" onClick={(e) => {
-                                        e.preventDefault();
-                                        handleGameTypeChange('Dagelijks');
-                                    }}>Dagelijks</a>
-                                    <a href="#" onClick={(e) => {
-                                        e.preventDefault();
-                                        handleGameTypeChange('Oneindig');
-                                    }}>Oneindig</a>
+                                    <div className="tabs">
+                                        <span className="tab"></span>
+                                        <span className="tab"></span>
+                                    </div>
+                                    <div className="menu-box">
+                                        <ul>
+                                            <li>
+                                                <label className="radio-option"
+                                                       onChange={() => handleGameTypeChange("Dagelijks")}>
+                                                    <input
+                                                        type="radio"
+                                                        name="gameType"
+                                                        value="Dagelijks"
+                                                        checked={gameType === "Dagelijks"}
+
+                                                    />
+                                                    Dagelijks
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <label className="radio-option"
+                                                       onChange={() => handleGameTypeChange("Oneindig")}
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name="gameType"
+                                                        value="Oneindig"
+                                                        checked={gameType === "Oneindig"}
+                                                    />
+                                                    Oneindig
+                                                </label>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -196,7 +232,8 @@ function App() {
                                 <button>Deel dit resultaat met je vrienden.</button>
                             </div>
                         }
-                        <div className="close" onClick={closeModal}></div>                    </div>
+                        <div className="close" onClick={closeModal}></div>
+                    </div>
                 </div>
                 : null}
         </>
