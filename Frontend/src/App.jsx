@@ -48,28 +48,48 @@ function App() {
 
     useEffect(() => {
         if (gameType === "Dagelijks") {
-            console.log("callinggggg");
             //if local storage already has a station that equals the daily station then dont reset the game.
             // If local storage has a station that does not equal the daily it means that game is from a different date
 
             fetch("http://localhost:3000/daily-station/")
                 .then(res => res.json())
                 .then(data => {
-                    console.log("aaaaaaaaaa", data);
                     if (localStorage.getItem('station') === data.station) {
-                        //TODO load guesses from cookie
+
+                        const currentDate = getFormattedDate();
+                        const savedState = JSON.parse(localStorage.getItem('dailyGameState'));
+
+                        if (savedState && savedState.date === currentDate) {
+                            const savedGuesses = savedState.guesses;
+                            setGuesses(savedGuesses);
+
+                            // Find the first empty guess slot
+                            const nextIndex = savedGuesses.findIndex(g => g === '');
+                            setCurrentGuessIndex(nextIndex === -1 ? savedGuesses.length : nextIndex);
+
+                            const dailyGameStatus = localStorage.getItem('dailyGameStatus') || 'playing';
+                            setGameStatus(dailyGameStatus);
+
+                            if (dailyGameStatus === 'won') setWinningModal(true);
+                            setCurrentGuess('');
+
+                        }
                     }
                     else {
                         resetGame();
+                        const currentDate = getFormattedDate();
+                        const dailyGameState = {date: currentDate, guesses: ['', '', '', '', '']};
+                        localStorage.setItem('dailyGameState', JSON.stringify(dailyGameState));
 
                         localStorage.setItem('station', data.station);
-
                         localStorage.setItem('shuffledStation', data.anagrams[0]);
+
+                        localStorage.setItem('dailyGameStatus', 'playing');
+                        handleGameStatus('playing')
                     }
                     setSolution(data.station);
                     setScrambledSolution(data.anagrams[0]);
 
-                    console.log("Today's station:", data.station);
                 });
         }
 
@@ -108,6 +128,18 @@ function App() {
         }
     };
 
+    const getFormattedDate = () => {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        let mm = today.getMonth() + 1; // Months start at 0!
+        let dd = today.getDate();
+
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+
+        return dd + '/' + mm + '/' + yyyy;
+    }
+
     const handleGuessSubmit = () => {
         // don't allow empty guesses or if you already have won or lost
         if (currentGuess.trim() === '' || gameStatus !== 'playing') {
@@ -116,30 +148,54 @@ function App() {
 
         const isCorrect = currentGuess.toUpperCase() === solution.toUpperCase();
 
+        const currentDate = getFormattedDate();
         // Update guesses array
         setGuesses(prevGuesses => {
             const newGuesses = [...prevGuesses];
             newGuesses[currentGuessIndex] = currentGuess;
+
+            //Save to localstorage
+            const dailyGameState = {date: currentDate, guesses: newGuesses};
+            localStorage.setItem('dailyGameState', JSON.stringify(dailyGameState));
+
             return newGuesses;
         });
 
-        //TODO add guess to browsers local storage
+
 
         // Check win/loss conditions
         if (isCorrect) {
-            setGameStatus('won');
-            setWinningModal(true)
-            console.log("You win!");
-        } else if (currentGuessIndex === max_guesses - 1) {
-            setGameStatus('lost');
-            console.log(`Game over! The answer was: ${solution}`);
-            // TODO: Implement game over scene
-        } else {
-            setCurrentGuessIndex(prev => prev + 1);
+            handleGameStatus('won')
+            localStorage.setItem("dailyGameStatus", 'won');
         }
-
+        else if (currentGuessIndex === max_guesses - 1) {
+            handleGameStatus('lost')
+            localStorage.setItem("dailyGameStatus", 'lost');
+        }
+        else {
+            handleGameStatus('playing', true)
+            localStorage.setItem("dailyGameStatus", 'playing');
+        }
         setCurrentGuess('');
     };
+
+
+    const handleGameStatus = (status, shouldIncrement = false) => {
+        setGameStatus(status);
+        if (status === 'won') {
+            setWinningModal(true)
+        }
+        else if (status === 'lost') {
+            //implement losing modal
+        }
+        else if (status === 'playing' && shouldIncrement) {
+            setCurrentGuessIndex(prev => prev + 1);
+        }
+    }
+
+    const getAmountOfGuesses = () => {
+        return guesses.filter(g => g && g.trim() !== '').length;
+    }
 
     const handleGameTypeChange = (newGameType) => {
         setGameType(newGameType);
@@ -195,16 +251,6 @@ function App() {
                             </button>
                             {gameType}
                             {dropdownOpen && (
-                                /*<div className="dropdown-content">
-                                       <li><a href="#" onClick={(e) => {
-                                                e.preventDefault();
-                                                handleGameTypeChange('Dagelijks');
-                                            }}>Dagelijks</a></li>
-                                            <li><a href="#" onClick={(e) => {
-                                                e.preventDefault();
-                                                handleGameTypeChange('Oneindig');
-                                            }}>Oneindig</a></li>
-                                </div>*/
                                 <div className="dropdown-content">
                                     <div className="tabs">
                                         <span className="tab"></span>
@@ -264,7 +310,7 @@ function App() {
                         <div className="modal-header">
                             <p>
                                 <span id="congrats">Gefeliciteerd!</span>
-                                <br/>Je raadde het station in {currentGuessIndex + 1} pogingen.
+                                <br/>Je raadde het station in {getAmountOfGuesses()} pogingen.
                             </p></div>
                         {gameType === 'Dagelijks' ?
                             <div className="share">
