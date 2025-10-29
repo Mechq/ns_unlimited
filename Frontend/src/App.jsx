@@ -1,8 +1,10 @@
 import './App.css'
-import {useCallback, useEffect, useState} from "react";
-import Keypad from "./components/Keypad.jsx";
-import keys from "./components/keys.js";
+import {useEffect, useState} from "react";
+import Keypad from "./components/keypad/Keypad.jsx";
+import keys from "./components/keypad/keys.js";
 import {stations} from "../data.js";
+import ConfettiManager from "./components/confetti/Confetti-manager.jsx";
+import Modal from "./components/modal/Modal.jsx";
 
 
 function App() {
@@ -15,6 +17,8 @@ function App() {
     const [currentGuessIndex, setCurrentGuessIndex] = useState(0);
     const [gameStatus, setGameStatus] = useState('playing');
     const [winningModal, setWinningModal] = useState(false);
+    const [hasWonDaily, setHasWonDaily] = useState(false);
+    const [maxStreak, setMaxStreak] = useState(0);
 
     function closeModal() {
         setWinningModal(false);
@@ -23,18 +27,18 @@ function App() {
     const max_guesses = 5;
     const max_guess_length = 22;
 
-    const resetUnlimitedGame = useCallback(() => {
-        console.log("reset unlimitedGame" + gameType);
 
-        if (gameType === 'Oneindig') {
-            console.log("Game Type");
-            resetGame()
-            const {solution, scrambledSolution} = selectRandomStation(stations);
-            console.log(scrambledSolution);
-            setScrambledSolution(scrambledSolution);
-            setSolution(solution);
+    useEffect(() => {
+        if (gameStatus === 'won') {
+            setWinningModal(true);
         }
-    }, [gameType])
+    }, [gameStatus]);
+
+    useEffect(() => {
+        console.log("Game status changed:", gameStatus);
+        console.log("Winning modal:", winningModal);
+    }, [gameStatus, winningModal]);
+
 
     // Reset game when game type changes
     const resetGame = () => {
@@ -47,6 +51,7 @@ function App() {
     }
 
     useEffect(() => {
+        resetGame();
         if (gameType === "Dagelijks") {
             //if local storage already has a station that equals the daily station then dont reset the game.
             // If local storage has a station that does not equal the daily it means that game is from a different date
@@ -54,50 +59,53 @@ function App() {
             fetch("http://localhost:3000/daily-station/")
                 .then(res => res.json())
                 .then(data => {
-                    if (localStorage.getItem('station') === data.station) {
+                    const currentDate = getFormattedDate();
+                    const savedState = JSON.parse(localStorage.getItem('dailyGameState'));
+                    const savedStation = localStorage.getItem('station');
 
-                        const currentDate = getFormattedDate();
-                        const savedState = JSON.parse(localStorage.getItem('dailyGameState'));
+                    // If same station and date, restore progress
+                    if (savedStation === data.station && savedState?.date === currentDate) {
+                        setGuesses(savedState.guesses);
+                        const nextIndex = savedState.guesses.findIndex(g => g === '');
+                        setCurrentGuessIndex(nextIndex === -1 ? savedState.guesses.length : nextIndex);
 
-                        if (savedState && savedState.date === currentDate) {
-                            const savedGuesses = savedState.guesses;
-                            setGuesses(savedGuesses);
-
-                            // Find the first empty guess slot
-                            const nextIndex = savedGuesses.findIndex(g => g === '');
-                            setCurrentGuessIndex(nextIndex === -1 ? savedGuesses.length : nextIndex);
-
-                            const dailyGameStatus = localStorage.getItem('dailyGameStatus') || 'playing';
-                            setGameStatus(dailyGameStatus);
-
-                            if (dailyGameStatus === 'won') setWinningModal(true);
-                            setCurrentGuess('');
-
-                        }
-                    }
-                    else {
-                        resetGame();
-                        const currentDate = getFormattedDate();
-                        const dailyGameState = {date: currentDate, guesses: ['', '', '', '', '']};
-                        localStorage.setItem('dailyGameState', JSON.stringify(dailyGameState));
-
+                        const dailyGameStatus = localStorage.getItem('dailyGameStatus') || 'playing';
+                        setGameStatus(dailyGameStatus);
+                        if (dailyGameStatus === 'won') setWinningModal(true);
+                    } else {
+                        // Otherwise, reset new daily game
+                        const newState = { date: currentDate, guesses: ['', '', '', '', ''] };
+                        localStorage.setItem('dailyGameState', JSON.stringify(newState));
                         localStorage.setItem('station', data.station);
                         localStorage.setItem('shuffledStation', data.anagrams[0]);
-
                         localStorage.setItem('dailyGameStatus', 'playing');
-                        handleGameStatus('playing')
                     }
+
                     setSolution(data.station);
                     setScrambledSolution(data.anagrams[0]);
 
+                    if (!localStorage.getItem('dailyStats')) {
+                        const dailyStatsJSON = { streak: 0, wins: 0, losses: 0, maxStreak: 0, lastWinDate: undefined };
+                        localStorage.setItem('dailyStats', JSON.stringify(dailyStatsJSON));
+                    }
                 });
+
+        } else if (gameType === "Oneindig") {
+            const { solution, scrambledSolution } = selectRandomStation(stations);
+            setSolution(solution);
+            setScrambledSolution(scrambledSolution);
+
+            const infiniteGameStatus = localStorage.getItem('infiniteGameStatus') || 'playing';
+            setGameStatus(infiniteGameStatus);
+
+            if (!localStorage.getItem('infiniteStats')) {
+                const infStatsJSON = { streak: 0, wins: 0, losses: 0, maxStreak: 0, lastWinDate: undefined };
+                localStorage.setItem('infiniteStats', JSON.stringify(infStatsJSON));
+            }
         }
-
     }, [gameType]);
 
-    useEffect(() => {
-        resetUnlimitedGame();
-    }, [gameType]);
+
 
 
     const selectRandomStation = (stationsData) => {
@@ -121,12 +129,34 @@ function App() {
             handleGuessSubmit();
         } else if (keyValue === '⌫') {
             setCurrentGuess((prev) => prev.slice(0, -1));
-        } else {
-            if (currentGuess.length < max_guess_length) {
+        }
+        else if (keyValue === '␣') {
+            //handle spacebar
+            setCurrentGuess((prev) => prev + " ");
+        }
+        else {
+            if (currentGuess.length <= max_guess_length) {
                 setCurrentGuess((prev) => prev + keyValue);
             }
         }
     };
+
+    const isStreak = (lastWinDate) => {
+        // check if lastWinDate is equal to yesterdays date
+        if (!lastWinDate) return false;
+
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const dd = String(yesterday.getDate()).padStart(2, '0');
+        const mm = String(yesterday.getMonth() + 1).padStart(2, '0');
+        const yyyy = yesterday.getFullYear();
+
+        const formattedYesterday = `${dd}/${mm}/${yyyy}`;
+
+        return lastWinDate === formattedYesterday;
+
+    }
 
     const getFormattedDate = () => {
         const today = new Date();
@@ -154,9 +184,16 @@ function App() {
             const newGuesses = [...prevGuesses];
             newGuesses[currentGuessIndex] = currentGuess;
 
-            //Save to localstorage
-            const dailyGameState = {date: currentDate, guesses: newGuesses};
-            localStorage.setItem('dailyGameState', JSON.stringify(dailyGameState));
+            //Save to localstorage if playing daily
+            if (gameType === 'Dagelijks'){
+                const dailyGameState = {date: currentDate, guesses: newGuesses};
+                localStorage.setItem('dailyGameState', JSON.stringify(dailyGameState));
+            }
+            else if (gameType === 'Oneindig') {
+                const infiniteGameState = {date: currentDate, guesses: newGuesses};
+                localStorage.setItem('infiniteGameState', JSON.stringify(infiniteGameState));
+            }
+
 
             return newGuesses;
         });
@@ -164,33 +201,124 @@ function App() {
 
 
         // Check win/loss conditions
-        if (isCorrect) {
-            handleGameStatus('won')
-            localStorage.setItem("dailyGameStatus", 'won');
+        if (gameType === 'Dagelijks') {
+            if (isCorrect) {
+                handleDailyWinLoss('won')
+                setHasWonDaily(true)
+            }
+            else if (currentGuessIndex === max_guesses - 1){
+                handleDailyWinLoss('lost')
+            }
+            else {
+                handleDailyWinLoss('playing')
+            }
         }
-        else if (currentGuessIndex === max_guesses - 1) {
-            handleGameStatus('lost')
-            localStorage.setItem("dailyGameStatus", 'lost');
-        }
-        else {
-            handleGameStatus('playing', true)
-            localStorage.setItem("dailyGameStatus", 'playing');
+
+        if (gameType === 'Oneindig') {
+            if (isCorrect) {
+                handleInfiniteWinLoss('won')
+            }
+            else if (currentGuessIndex === max_guesses - 1){
+                handleInfiniteWinLoss('lost')
+            }
+            else {
+                handleInfiniteWinLoss('playing')
+            }
         }
         setCurrentGuess('');
+
     };
 
+    const handleDailyWinLoss = (status) => {
+        let stats = JSON.parse(localStorage.getItem('dailyStats'))
+        let statsJSON = {};
 
-    const handleGameStatus = (status, shouldIncrement = false) => {
-        setGameStatus(status);
+        if (!stats || stats.wins === undefined || stats.losses === undefined || stats.streak === undefined || stats.maxStreak === undefined) {
+            stats = { streak: 0, wins: 0, losses: 0, maxStreak: 0, lastWinDate: undefined };
+        }
         if (status === 'won') {
-            setWinningModal(true)
+            localStorage.setItem("dailyGameStatus", 'won'); // save first
+            setGameStatus('won');
+            setWinningModal(true);
+
+            const newWins = stats.wins + 1;
+            let newStreak;
+            let newMaxStreak;
+            if (isStreak(stats.lastWinDate)) {
+                newStreak = stats.streak + 1;
+            }
+            else {
+                newStreak = 1;
+            }
+            if (stats.maxStreak < newStreak) {
+                newMaxStreak = stats.maxStreak + 1;
+            }
+            else {
+                newMaxStreak = stats.maxStreak;
+            }
+            statsJSON = {streak: newStreak, wins: newWins, losses: stats.losses, maxStreak: newMaxStreak, lastWinDate: getFormattedDate()};
+
         }
         else if (status === 'lost') {
-            //implement losing modal
+            setGameStatus('lost');
+            //TODO implement losing modal
+            localStorage.setItem("dailyGameStatus", 'lost');
+            const newLosses = stats.losses +1;
+            statsJSON = {streak: 0, wins: stats.wins, losses: newLosses, maxStreak: stats.maxStreak, lastWinDate: stats.lastWinDate};
         }
-        else if (status === 'playing' && shouldIncrement) {
+        else if (status === 'playing') {
             setCurrentGuessIndex(prev => prev + 1);
+            localStorage.setItem("dailyGameStatus", 'playing');
+            setCurrentGuess('');
+
+
         }
+        localStorage.setItem('dailyStats', JSON.stringify(statsJSON));
+
+    }
+
+    const handleInfiniteWinLoss = (status) => {
+        let stats = JSON.parse(localStorage.getItem('infiniteStats'))
+        let statsJSON = {};
+
+        if (!stats || stats.wins === undefined || stats.losses === undefined || stats.streak === undefined) {
+            stats = { streak: 0, wins: 0, losses: 0};
+        }
+        if (status === 'won') {
+            localStorage.setItem("infiniteGameStatus", 'won');
+            setGameStatus('won');
+            setWinningModal(true);
+
+            const newWins = stats.wins + 1;
+            let newStreak = stats.streak + 1;
+
+        statsJSON = {streak: newStreak, wins: newWins, losses: stats.losses};
+            localStorage.setItem('infiniteStats', JSON.stringify(statsJSON));
+
+        }
+        else if (status === 'lost') {
+            setGameStatus('lost');
+            //TODO implement losing modal
+            localStorage.setItem("infiniteGameStatus", 'lost');
+            const newLosses = stats.losses +1;
+            statsJSON = {streak: 0, wins: stats.wins, losses: newLosses};
+            localStorage.setItem('infiniteStats', JSON.stringify(statsJSON));
+
+        }
+        else if (status === 'playing') {
+            setCurrentGuessIndex(prev => prev + 1);
+            localStorage.setItem("infiniteGameStatus", 'playing');
+            setCurrentGuess('');
+
+        }
+
+    }
+
+    const playAgain = () => {
+        resetGame()
+        const { solution, scrambledSolution } = selectRandomStation(stations);
+        setSolution(solution);
+        setScrambledSolution(scrambledSolution);
     }
 
     const getAmountOfGuesses = () => {
@@ -198,9 +326,10 @@ function App() {
     }
 
     const handleGameTypeChange = (newGameType) => {
+        if (newGameType === gameType) return;
         setGameType(newGameType);
         setDropdownOpen(false);
-        console.log(newGameType);
+
     };
 
     const toggleDropdown = () => {
@@ -258,9 +387,8 @@ function App() {
                                     </div>
                                     <div className="menu-box">
                                         <ul>
-                                            <li>
-                                                <label className="radio-option"
-                                                       onChange={() => handleGameTypeChange("Dagelijks")}>
+                                            <li onChange={() => handleGameTypeChange("Dagelijks")}>
+                                                <label className="radio-option">
                                                     <input
                                                         type="radio"
                                                         name="gameType"
@@ -271,9 +399,10 @@ function App() {
                                                     Dagelijks
                                                 </label>
                                             </li>
-                                            <li>
+                                            <li
+                                                onChange={() => handleGameTypeChange("Oneindig")}
+                                            >
                                                 <label className="radio-option"
-                                                       onChange={() => handleGameTypeChange("Oneindig")}
                                                 >
                                                     <input
                                                         type="radio"
@@ -304,28 +433,16 @@ function App() {
                     <Keypad keys={keys} onKeyClick={handleKeypadInput}/>
                 </div>
             </div>
-            {winningModal ? <div className="modal">
-
-                    <div className="modal-inner">
-                        <div className="modal-header">
-                            <p>
-                                <span id="congrats">Gefeliciteerd!</span>
-                                <br/>Je raadde het station in {getAmountOfGuesses()} pogingen.
-                            </p></div>
-                        {gameType === 'Dagelijks' ?
-                            <div className="share">
-                                <button>Deel dit resultaat met je vrienden.</button>
-                            </div>
-                            :
-                            <div className="share play-again">
-                                <button onClick={resetGame} id="play-again">Speel opnieuw! ↺</button>
-                                <button>Deel dit resultaat met je vrienden.</button>
-                            </div>
-                        }
-                        <div className="close" onClick={closeModal}></div>
-                    </div>
-                </div>
+            {winningModal ?
+                <Modal gameStatus={gameStatus}
+                                   gameType={gameType}
+                                   solution={solution}
+                                   playAgain={playAgain}
+                                   amountOfGuesses={getAmountOfGuesses()}
+                                   closeModal={closeModal}
+                />
                 : null}
+          <ConfettiManager  trigger={hasWonDaily}/>
         </>
     );
 }

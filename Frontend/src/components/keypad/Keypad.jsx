@@ -9,7 +9,7 @@ export default function Keypad({keys, onKeyClick}) {
                 <div key={rowIndex} className="key-row">
                     {row && Array.isArray(row) && row.map((keyObject) => {
                         const keyValue = keyObject.key;
-                        const keyClass = `key-button ${keyValue.length > 1 || keyValue === '⌫' ? 'large-key' : ''}`;
+                        const keyClass = `key-button ${keyValue === 'ENTER'|| keyValue === '⌫' || keyValue === '␣' ? 'large-key' : ''}`;
 
                         return (
                             <div

@@ -1,0 +1,111 @@
+.keypad {
+    max-width: 100vw;
+    text-align: center;
+    position: relative;
+    bottom: 2px;
+    margin: 0 8px;
+}
+
+.key-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.key-button {
+    margin: 2px;
+    min-width: 32px;
+    height: 50px;
+    background: #e4e4e4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.key-button:hover {
+    background-color: #d1d1d1;
+}
+
+.key-button.large-key {
+    min-width: 25vw;
+    font-size: 0.8em;
+}
+@media (min-width: 467px) {
+    .key-button {
+        min-width: 42px;
+        height: 55px;
+        font-size: 1.1em;
+        margin: 2px;
+    }
+
+    .key-button.large-key {
+        min-width: 15vw;
+        font-size: 1em;
+    }
+
+    .keypad {
+        bottom: 10px;
+        margin: 0 20px;
+    }
+}
+
+
+@media (min-width: 550px) {
+    .key-button {
+        min-width: 45px;
+        height: 60px;
+        font-size: 1.2em;
+        margin: 4px;
+    }
+
+    .key-button.large-key {
+        min-width: 15vw;
+        font-size: 1em;
+    }
+
+    .keypad {
+        bottom: 10px;
+        margin: 0 20px;
+    }
+}
+
+/* 💻 Small laptops (≥1024px) */
+@media (min-width: 1024px) {
+    .key-button {
+        min-width: 55px;
+        height: 65px;
+        font-size: 1.3em;
+    }
+
+    .key-button.large-key {
+        min-width: 10vw;
+        font-size: 1.1em;
+    }
+
+    .keypad {
+        margin: 0 auto;
+        max-width: 700px;
+    }
+}
+
+/* 🖥️ Large screens (≥1440px) */
+@media (min-width: 1440px) {
+    .key-button {
+        min-width: 65px;
+        height: 70px;
+        font-size: 1.4em;
+    }
+
+    .key-button.large-key {
+        min-width: 8vw;
+        font-size: 1.1em;
+    }
+
+
+}
